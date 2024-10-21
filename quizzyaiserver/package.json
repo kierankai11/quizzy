@@ -1,0 +1,21 @@
+{
+  "name": "study-device-server",
+  "version": "1.0.0",
+  "description": "API Ollama server",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node app.js",
+    "test": "test"
+  },
+  "author": "kieran",
+  "license": "ISC",
+  "dependencies": {
+    "ollama": "^0.5.9"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.19.5",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.7.5"
+  }
+}
