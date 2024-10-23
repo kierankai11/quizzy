@@ -1,5 +1,5 @@
 #include <FS.h>
-#include "Free_Fonts.h" // Include the header file attached to this sketch
+#include "Free_Fonts.h"            // Include the header file attached to this sketch
 
 #include <TFT_eSPI.h>              // Hardware-specific library
 #include <TFT_eWidget.h>           // Widget library
@@ -14,7 +14,7 @@ TFT_eSPI tft = TFT_eSPI();         // Invoke custom library
 #define REPEAT_CAL false
 uint16_t t_x, t_y; 
 bool pressed;
-bool initCategoryButtons, initSubCatButtons, initOptionsButtons, initDifficulty, initNumQuestion, initRESULTS = false;
+bool initCategoryButtons, initSubCatButtons, initOptionsButtons, initDifficulty, initRESULTS = false;
 #define BUTTON_W 100
 #define BUTTON_H 50
 
@@ -23,28 +23,19 @@ bool initCategoryButtons, initSubCatButtons, initOptionsButtons, initDifficulty,
 #define NEXT_BUTTON_W 100
 #define NEXT_BUTTON_H 50
 
-ButtonWidget btnOption1 = ButtonWidget(&tft);
-ButtonWidget btnOption2 = ButtonWidget(&tft);
-ButtonWidget btnOption3 = ButtonWidget(&tft);
-ButtonWidget btnOption4 = ButtonWidget(&tft);
-String options[4] = {"Option 1", "Option 2", "Option 3", "Option 4"};
-ButtonWidget btnHome = ButtonWidget(&tft);
-ButtonWidget btnNext = ButtonWidget(&tft);
-ButtonWidget btnHome2 = ButtonWidget(&tft);
-
+// Disgusting code ik ik but i had no time and im no genius
 String globalCorrectAnswer = "null";
 String correctAnswer;
 String categorySelected = "Nil";
-int numberOfQuestions = 5;
+// int numberOfQuestions = 5;
 String difficulty = "medium";
 bool questionsDownloaded = false;
 JsonArray allQuestions;
 const char* JsonCorrectAnswer;
 const char* question;
 JsonArray incorrectAnswers;
-int questionIndex = -1;
-int maxQuestionIndex = 1;
 
+// Create button variables
 ButtonWidget btnR = ButtonWidget(&tft);
 ButtonWidget btnCat1 = ButtonWidget(&tft);
 ButtonWidget btnCat2 = ButtonWidget(&tft);
@@ -66,19 +57,24 @@ ButtonWidget easyBtn = ButtonWidget(&tft);
 ButtonWidget mediumBtn= ButtonWidget(&tft);
 ButtonWidget hardBtn = ButtonWidget(&tft);
 
-ButtonWidget fiveBtn = ButtonWidget(&tft);
-ButtonWidget tenBtn= ButtonWidget(&tft);
-ButtonWidget twentyBtn = ButtonWidget(&tft);
+ButtonWidget btnOption1 = ButtonWidget(&tft);
+ButtonWidget btnOption2 = ButtonWidget(&tft);
+ButtonWidget btnOption3 = ButtonWidget(&tft);
+ButtonWidget btnOption4 = ButtonWidget(&tft);
+String options[4] = {"Option 1", "Option 2", "Option 3", "Option 4"};
+ButtonWidget btnNext = ButtonWidget(&tft);
+ButtonWidget btnhome = ButtonWidget(&tft);
 
-enum ProgramState {START, chooseCategory, chooseSubCategory, selectDifficulty, selectNumQuestion, quiz, RESULTS};
+// ButtonWidget fiveBtn = ButtonWidget(&tft);
+// ButtonWidget tenBtn= ButtonWidget(&tft);
+// ButtonWidget twentyBtn= ButtonWidget(&tft);
+
+enum ProgramState {START, chooseCategory, chooseSubCategory, selectDifficulty, quiz, RESULTS};
 ProgramState currentState = START;
 
 void btnR_pressAction(void) {
-  Serial.println("Button R got pressed line 32");
-  if (btnR.justPressed()) {
-    Serial.println("Button R got pressed line 34");
-    currentState = chooseCategory;
-  }
+  Serial.println("Play");
+  currentState = chooseCategory;
 }
 
 // Button actions for categories
@@ -157,54 +153,38 @@ void sub3Cat3_pressAction() {
 void easyBtn_pressAction() {
   Serial.println("Easy Pressed");
   difficulty = "easy";
-  currentState = selectNumQuestion; 
+  currentState = quiz; 
 }
 
 void mediumBtn_pressAction() {
   Serial.println("Medium Pressed");
   difficulty = "medium";
-  currentState = selectNumQuestion; 
+  currentState = quiz; 
 }
 
 void hardBtn_pressAction() {
   Serial.println("Hard Pressed");
   difficulty = "hard";
-  currentState = selectNumQuestion; 
-}
-
-void fiveBtn_pressAction() {
-  Serial.println("5 Questions Pressed");
-  numberOfQuestions = 5;
   currentState = quiz; 
 }
 
-void tenBtn_pressAction() {
-  Serial.println("10 Questions Pressed");
-  numberOfQuestions = 10;
-  currentState = quiz; 
-}
+// void fiveBtn_pressAction() {
+//   Serial.println("5 Questions Pressed");
+//   numberOfQuestions = 5;
+//   currentState = quiz; 
+// }
 
-void twentyBtn_pressAction() {
-  Serial.println("20 Questions Pressed");
-  numberOfQuestions = 20;
-  currentState = quiz; 
-}
+// void tenBtn_pressAction() {
+//   Serial.println("10 Questions Pressed");
+//   numberOfQuestions = 10;
+//   currentState = quiz; 
+// }
 
-void processButtonInput(const String& selectedOption) {
-  Serial.println("Selected Option: " + selectedOption);
-  if (selectedOption == globalCorrectAnswer) {
-    tft.fillRect(0, 120, 320, 120, TFT_BLACK);
-    tft.fillRoundRect(120, 100, 80, 40, 5, TFT_GREEN);
-    tft.setTextColor(TFT_BLACK);
-    tft.drawString("Correct!", 120, 100);
-
-  } else {
-    tft.fillRect(0, 120, 320, 120, TFT_BLACK);
-    tft.fillRoundRect(120, 100, 80, 40, 5, TFT_BLUE);
-    tft.setTextColor(TFT_WHITE);
-    tft.drawString("Incorrect", 120, 100);
-  }
-}
+// void twentyBtn_pressAction() {
+//   Serial.println("20 Questions Pressed");
+//   numberOfQuestions = 20;
+//   currentState = quiz; 
+// }
 
 void btnOpt1_pressAction() {
   if (options[0] == globalCorrectAnswer) {
@@ -249,38 +229,37 @@ void next_pressAction() {
   Serial.println("NEXT");
   // Reset the options for the next question
   initOptionsButtons = false;
+  questionsDownloaded = false;
   currentState = quiz;
 }
 
-void home2_pressAction() {
+void home_pressAction(void) {
   Serial.println("home was pressed");
   home();
 }
 
 void showCorrect() {
+  initRESULTS = false;
   currentState = RESULTS;
   tft.fillScreen(TFT_BLACK);
   tft.fillRoundRect(70, 40, 200, 70, 5, TFT_GREEN);
   tft.setTextColor(TFT_BLACK);
-  tft.setTextSize(2);
+  tft.setFreeFont(FF24);
   tft.drawString("Correct!", 85, 55);
+  tft.setFreeFont(FF18);
 }
 
 void showWrong() {
+  initRESULTS = false;
   currentState = RESULTS;
   tft.fillScreen(TFT_BLACK);
-  tft.fillRoundRect(120, 20, 120, 30, 5, TFT_RED);
+  tft.fillRoundRect(115, 20, 120, 30, 5, TFT_GOLD);
   tft.setTextColor(TFT_BLACK);
   tft.drawString("Incorrect", 130, 25);
   tft.setTextColor(TFT_WHITE);
   String formattedText = wrapText(globalCorrectAnswer, 20);
   tft.drawString("Correct Answer:", 0, 60);
   drawWrappedText(formattedText, 0, 80);
-}
-
-void home_pressAction() {
-  Serial.println("home is pressed");
-  home();
 }
 
 void initButtons() {
@@ -303,11 +282,7 @@ void changeBtnRColor() {
 }
 
 void home() {
-  // Go back to START state and reset options
-  initSubCatButtons = false;
-  initCategoryButtons = false;
-  initOptionsButtons = false;
-  initRESULTS = false;
+  initCategoryButtons, initSubCatButtons, initOptionsButtons, initDifficulty, initRESULTS = false;
   currentState = START;
   setup();
 }
@@ -335,25 +310,25 @@ void initOptionButtons(const String incorrectOptions[3], const String& correctAn
   uint16_t y = tft.height() / 2;
 
   // Convert String to char* and initialize buttons
-  btnOption1.initButtonUL(x + 30, y + 10, 120, 45, TFT_WHITE, TFT_GREEN, TFT_BLACK, options[1].c_str(), 1);
+  btnOption1.initButtonUL(x + 5, y + 10, 152, 45, TFT_WHITE, TFT_GREEN, TFT_BLACK, options[1].c_str(), 1);
   btnOption1.setPressAction(btnOpt1_pressAction);
   btnOption1.drawSmoothButton(false, 3, TFT_BLACK);
 
-  btnOption2.initButtonUL(x - 140, y + 10, 120, 45, TFT_WHITE, TFT_GREEN, TFT_BLACK, options[0].c_str(), 1);
+  btnOption2.initButtonUL(x - 157, y + 10, 152, 45, TFT_WHITE, TFT_GREEN, TFT_BLACK, options[0].c_str(), 1);
   btnOption2.setPressAction(btnOpt2_pressAction);
   btnOption2.drawSmoothButton(false, 3, TFT_BLACK);
 
-  btnOption3.initButtonUL(x + 30, y + 70, 120, 45, TFT_WHITE, TFT_GREEN, TFT_BLACK, options[3].c_str(), 1);
+  btnOption3.initButtonUL(x + 5, y + 60, 152, 45, TFT_WHITE, TFT_GREEN, TFT_BLACK, options[3].c_str(), 1);
   btnOption3.setPressAction(btnOpt3_pressAction);
   btnOption3.drawSmoothButton(false, 3, TFT_BLACK);
 
-  btnOption4.initButtonUL(x - 140, y + 70, 120, 45, TFT_WHITE, TFT_GREEN, TFT_BLACK, options[2].c_str(), 1);
+  btnOption4.initButtonUL(x - 157, y + 60, 152, 45, TFT_WHITE, TFT_GREEN, TFT_BLACK, options[2].c_str(), 1);
   btnOption4.setPressAction(btnOpt4_pressAction);
   btnOption4.drawSmoothButton(false, 3, TFT_BLACK);
 
-  btnHome.initButtonUL(x + 70, y - 50, 80, 35, TFT_WHITE, TFT_BLUE, TFT_BLACK, "Home", 1);
-  btnHome.setPressAction(home_pressAction);
-  btnHome.drawSmoothButton(false, 2, TFT_BLACK);
+  // btnhome.initButtonUL(x + 70, y - 15, 100, 50, TFT_WHITE, 0x00c8ff, TFT_BLACK, "Home", 1);
+  // btnhome.setPressAction(home_pressAction);
+  // btnhome.drawSmoothButton(false, 2, TFT_BLACK);
 
   globalCorrectAnswer = correctAnswer;
   Serial.println("GlobalCorrectAnswer: " + globalCorrectAnswer);
@@ -407,14 +382,8 @@ void drawWrappedText(const String &text, int x, int y) {
 }
 
 void processQuestion() {
+  Serial.println("Processing");
   if (!initOptionsButtons) {
-    if (maxQuestionIndex > 1) {
-      question = allQuestions[questionIndex]["question"];
-      JsonCorrectAnswer = allQuestions[questionIndex]["correctAnswer"];
-      incorrectAnswers = allQuestions[questionIndex]["incorrectAnswer"];
-      correctAnswer = String(JsonCorrectAnswer);
-    }
-
     if (question) {
       correctAnswer = String(JsonCorrectAnswer);
       Serial.println("IF question was activated");
@@ -436,18 +405,22 @@ void processQuestion() {
         incorrectOptions[i] = incorrectAnswers[i].as<String>();
       }
       initOptionButtons(incorrectOptions, correctAnswer);
-      questionIndex++;
+      initOptionsButtons = true;
+      questionsDownloaded = true;
     } else {
-      tft.drawString("Question generation error", 20, 20);
       Serial.println("Question not properly generated");
+      initOptionsButtons = false;
       questionsDownloaded = false;
-      delay(5000);
+      delay(2000);
     }
-    initOptionsButtons = true;
   }
   
   if (pressed) {
     Serial.println("SIGMA");
+    Serial.print("X: ");
+    Serial.println(t_x);
+    Serial.print("Y: ");
+    Serial.println(t_y);
     if (btnOption1.contains(t_x, t_y)) {
       btnOption1.press(true);
       btnOption1.pressAction();
@@ -460,15 +433,9 @@ void processQuestion() {
     } else if (btnOption4.contains(t_x, t_y)) {
       btnOption4.press(true);
       btnOption4.pressAction();
-    } else if (btnHome.contains(t_x, t_y)) {
-      btnHome.press(true);
-      btnHome.pressAction();
-    } else {
-      btnOption1.press(false);
-      btnOption2.press(false);
-      btnOption3.press(false);
-      btnOption4.press(false);
-      btnHome.press(false);
+    } else if (btnhome.contains(t_x, t_y)) { 
+      btnhome.press(true);
+      btnhome.pressAction();
     }
   }
 }
@@ -487,7 +454,9 @@ void setup() {
   WiFi.begin(ssid, password); 
   Serial.println("Connecting to WiFi..");
   tft.setTextColor(TFT_WHITE);
-  tft.drawString("Quizzy!",  120,  40);
+  tft.setFreeFont(FF23);
+  tft.drawString("Quizzy!", 100, 40);
+  tft.setFreeFont(FF18);
 
   while (WiFi.status() != WL_CONNECTED) { //Check for the connection
     // Serial
@@ -563,17 +532,19 @@ void loop() {
           uint16_t x = (tft.width() - BUTTON_W) / 2;
           uint16_t catY = tft.height() / 2 - 3 * BUTTON_H / 2 - 20;
           tft.setTextColor(TFT_WHITE);
-          tft.drawString("Choose Category", x - 30, catY - 10);
+          tft.setFreeFont(FF22);
+          tft.drawString("Choose Category", x - 50, catY - 10);
+          tft.setFreeFont(FF18);
 
-          btnCat1.initButtonUL(x, catY + 30, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_GREEN, TFT_BLACK, "Biology", 1);
+          btnCat1.initButtonUL(x - 15, catY + 30, BUTTON_W + 60, BUTTON_H, TFT_WHITE, TFT_GREEN, TFT_BLACK, "Biology", 1);
           btnCat1.setPressAction(btnCat1_pressAction);
           btnCat1.drawSmoothButton(false, 3, TFT_BLACK);
 
-          btnCat2.initButtonUL(x, catY + BUTTON_H + 40, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_GOLD, TFT_BLACK, "Physics", 1);
+          btnCat2.initButtonUL(x - 15, catY + BUTTON_H + 40, BUTTON_W + 60, BUTTON_H, TFT_WHITE, TFT_GOLD, TFT_BLACK, "Physics", 1);
           btnCat2.setPressAction(btnCat2_pressAction);
           btnCat2.drawSmoothButton(false, 3, TFT_BLACK);
 
-          btnCat3.initButtonUL(x, catY + 2 * (BUTTON_H + 10) + 30, BUTTON_W + 30, BUTTON_H, TFT_WHITE, 0x00c8ff, TFT_BLACK, "Maths", 1);
+          btnCat3.initButtonUL(x - 15, catY + 2 * (BUTTON_H + 10) + 30, BUTTON_W + 60, BUTTON_H, TFT_WHITE, 0x00c8ff, TFT_BLACK, "Maths", 1);
           btnCat3.setPressAction(btnCat3_pressAction);
           btnCat3.drawSmoothButton(false, 3, TFT_BLACK);
 
@@ -582,7 +553,61 @@ void loop() {
         break;
       }
       case chooseSubCategory: {
-      if (pressed) {
+
+      if (!initSubCatButtons) {
+          tft.fillScreen(TFT_BLACK);
+          delay(600);
+          Serial.println("Choose Sub Category");
+          uint16_t x = (tft.width() - BUTTON_W) / 2;
+          uint16_t y = tft.height() / 2 - 3 * BUTTON_H / 2 -20;
+          tft.setTextColor(TFT_WHITE);
+          tft.setFreeFont(FF22);
+          tft.drawString("Choose Sub-Category", x - 70, y - 10);
+          tft.setFreeFont(FF18);
+
+          if (categorySelected == "Biology") {
+            sub1Cat1.initButtonUL(x - 15, y + 30, BUTTON_W + 60, BUTTON_H, TFT_WHITE, 0x00c8ff, TFT_BLACK, "Fungi", 1);
+            sub1Cat1.setPressAction(sub1Cat1_pressAction);
+            sub1Cat1.drawSmoothButton(false, 3, TFT_BLACK);
+
+            sub2Cat1.initButtonUL(x - 15, y + BUTTON_H + 40, BUTTON_W + 60, BUTTON_H, TFT_WHITE, TFT_GREEN, TFT_BLACK, "Virus", 1);
+            sub2Cat1.setPressAction(sub2Cat1_pressAction);
+            sub2Cat1.drawSmoothButton(false, 3, TFT_BLACK);
+
+            sub3Cat1.initButtonUL(x - 15, y + 2 * (BUTTON_H + 10) + 30, BUTTON_W + 60, BUTTON_H, TFT_WHITE, TFT_GOLD, TFT_BLACK, "Antibiotics", 1);
+            sub3Cat1.setPressAction(sub3Cat1_pressAction);
+            sub3Cat1.drawSmoothButton(false, 3, TFT_BLACK);
+          } else if (categorySelected == "Physics") {
+            sub1Cat2.initButtonUL(x - 15, y + 30, BUTTON_W + 60, BUTTON_H, TFT_WHITE, 0x00c8ff, TFT_BLACK, "Heat", 1);
+            sub1Cat2.setPressAction(sub1Cat2_pressAction);
+            sub1Cat2.drawSmoothButton(false, 3, TFT_BLACK);
+
+            sub2Cat2.initButtonUL(x - 15, y + BUTTON_H + 40, BUTTON_W + 60, BUTTON_H, TFT_WHITE, TFT_GREEN, TFT_BLACK, "Energy", 1);
+            sub2Cat2.setPressAction(sub2Cat2_pressAction);
+            sub2Cat2.drawSmoothButton(false, 3, TFT_BLACK);
+
+            sub3Cat2.initButtonUL(x - 15, y + 2 * (BUTTON_H + 10) + 30, BUTTON_W + 60, BUTTON_H, TFT_WHITE, TFT_GOLD, TFT_BLACK, "Force", 1);
+            sub3Cat2.setPressAction(sub3Cat2_pressAction);
+            sub3Cat2.drawSmoothButton(false, 3, TFT_BLACK);
+          } else if(categorySelected == "Mathematics") {
+            sub1Cat3.initButtonUL(x - 15, y + 30, BUTTON_W + 60, BUTTON_H, TFT_WHITE, 0x00c8ff, TFT_BLACK, "Circles", 1);
+            sub1Cat3.setPressAction(sub1Cat3_pressAction);
+            sub1Cat3.drawSmoothButton(false, 3, TFT_BLACK);
+
+            sub2Cat3.initButtonUL(x - 15, y + BUTTON_H + 40, BUTTON_W + 60, BUTTON_H, TFT_WHITE, TFT_GREEN, TFT_BLACK, "Ratio", 1);
+            sub2Cat3.setPressAction(sub2Cat3_pressAction);
+            sub2Cat3.drawSmoothButton(false, 3, TFT_BLACK);
+
+            sub3Cat3.initButtonUL(x - 15, y + 2 * (BUTTON_H + 10) + 30, BUTTON_W + 60, BUTTON_H, TFT_WHITE, TFT_GOLD, TFT_BLACK, "Area", 1);
+            sub3Cat3.setPressAction(sub3Cat3_pressAction);
+            sub3Cat3.drawSmoothButton(false, 3, TFT_BLACK);
+          }
+          // btnhome.initButtonUL(x + 70, y - 25, 90, 45, TFT_WHITE, 0x00c8ff, TFT_BLACK, "Home", 1);
+          // btnhome.setPressAction(home_pressAction);
+          // btnhome.drawSmoothButton(false, 2, TFT_BLACK);
+          initSubCatButtons = true;
+        }
+        if (pressed) {
           if (sub1Cat1.contains(t_x, t_y)) {                  // BIOLOGY
             sub1Cat1.press(true);
             sub1Cat1.pressAction();
@@ -610,75 +635,40 @@ void loop() {
           } else if (sub3Cat3.contains(t_x, t_y)) {
             sub3Cat3.press(true);
             sub3Cat3.pressAction();
+          } else if (btnhome.contains(t_x, t_y)) {
+            btnhome.press(true);
+            btnhome.pressAction();
           }
-      }
-
-      if (!initSubCatButtons) {
-          delay(600);
-          tft.fillScreen(TFT_BLACK);
-          Serial.println("Choose Sub Category");
-          uint16_t x = (tft.width() - BUTTON_W) / 2;
-          uint16_t y = tft.height() / 2 - 3 * BUTTON_H / 2 -20;
-
-          if (categorySelected == "Biology") {
-            sub1Cat1.initButtonUL(x, y, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_BLUE, TFT_BLACK, "Fungi", 1);
-            sub1Cat1.setPressAction(sub1Cat1_pressAction);
-            sub1Cat1.drawSmoothButton(false, 3, TFT_BLACK);
-
-            sub2Cat1.initButtonUL(x, y + BUTTON_H + 10, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_GREEN, TFT_BLACK, "Virus", 1);
-            sub2Cat1.setPressAction(sub2Cat1_pressAction);
-            sub2Cat1.drawSmoothButton(false, 3, TFT_BLACK);
-
-            sub3Cat1.initButtonUL(x, y + 2 * (BUTTON_H + 10), BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_RED, TFT_BLACK, "Antibiotics", 1);
-            sub3Cat1.setPressAction(sub3Cat1_pressAction);
-            sub3Cat1.drawSmoothButton(false, 3, TFT_BLACK);
-          } else if (categorySelected == "Physics") {
-            sub1Cat2.initButtonUL(x, y, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_BLUE, TFT_BLACK, "Heat", 1);
-            sub1Cat2.setPressAction(sub1Cat2_pressAction);
-            sub1Cat2.drawSmoothButton(false, 3, TFT_BLACK);
-
-            sub2Cat2.initButtonUL(x, y + BUTTON_H + 10, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_GREEN, TFT_BLACK, "Energy", 1);
-            sub2Cat2.setPressAction(sub2Cat2_pressAction);
-            sub2Cat2.drawSmoothButton(false, 3, TFT_BLACK);
-
-            sub3Cat2.initButtonUL(x, y + 2 * (BUTTON_H + 10), BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_GOLD, TFT_BLACK, "Force", 1);
-            sub3Cat2.setPressAction(sub3Cat2_pressAction);
-            sub3Cat2.drawSmoothButton(false, 3, TFT_BLACK);
-          } else if(categorySelected == "Mathematics") {
-            sub1Cat3.initButtonUL(x, y, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_CYAN, TFT_BLACK, "Circles", 1);
-            sub1Cat3.setPressAction(sub1Cat3_pressAction);
-            sub1Cat3.drawSmoothButton(false, 3, TFT_BLACK);
-
-            sub2Cat3.initButtonUL(x, y + BUTTON_H + 10, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_GREEN, TFT_BLACK, "Ratio", 1);
-            sub2Cat3.setPressAction(sub2Cat3_pressAction);
-            sub2Cat3.drawSmoothButton(false, 3, TFT_BLACK);
-
-            sub3Cat3.initButtonUL(x, y + 2 * (BUTTON_H + 10), BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_GOLD, TFT_BLACK, "Area", 1);
-            sub3Cat3.setPressAction(sub3Cat3_pressAction);
-            sub3Cat3.drawSmoothButton(false, 3, TFT_BLACK);
-          }
-          initSubCatButtons = true;
         }
       break;
       }
       case selectDifficulty: {
         if (!initDifficulty) {
-          delay(600);
-          tft.fillScreen(TFT_BLACK);
-          Serial.println("Choose Difficulty");
           uint16_t x = (tft.width() - BUTTON_W) / 2;
           uint16_t y = tft.height() / 2 - 3 * BUTTON_H / 2 -20;
-          easyBtn.initButtonUL(x, y + 20, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_GREEN, TFT_BLACK, "Easy", 1);
+          tft.fillScreen(TFT_BLACK);
+          delay(600);
+          Serial.println("Choose Difficulty");
+          tft.setTextColor(TFT_WHITE);
+          tft.setFreeFont(FF22);
+          tft.drawString("Choose Difficulty", x - 50, y - 10);
+          tft.setFreeFont(FF18);
+
+          easyBtn.initButtonUL(x - 15, y + 20, BUTTON_W + 60, BUTTON_H, TFT_WHITE, TFT_GREEN, TFT_BLACK, "Easy", 1);
           easyBtn.setPressAction(easyBtn_pressAction);
           easyBtn.drawSmoothButton(false, 3, TFT_BLACK);
 
-          mediumBtn.initButtonUL(x, y + 80, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_CYAN, TFT_BLACK, "Medium", 1);
+          mediumBtn.initButtonUL(x - 15, y + 80, BUTTON_W + 60, BUTTON_H, TFT_WHITE, TFT_CYAN, TFT_BLACK, "Medium", 1);
           mediumBtn.setPressAction(mediumBtn_pressAction);
           mediumBtn.drawSmoothButton(false, 3, TFT_BLACK);
 
-          hardBtn.initButtonUL(x, y + 140, BUTTON_W + 30, BUTTON_H, TFT_WHITE, 0xc2ccff, TFT_BLACK, "Hard", 1);
+          hardBtn.initButtonUL(x - 15, y + 140, BUTTON_W + 60, BUTTON_H, TFT_WHITE, 0x00c8ff, TFT_BLACK, "Hard", 1);
           hardBtn.setPressAction(hardBtn_pressAction);
           hardBtn.drawSmoothButton(false, 3, TFT_BLACK);
+
+          // btnhome.initButtonUL(x + 70, y - 25, 90, 45, TFT_WHITE, 0x00c8ff, TFT_BLACK, "Home", 1);
+          // btnhome.setPressAction(home_pressAction);
+          // btnhome.drawSmoothButton(false, 2, TFT_BLACK);
           initDifficulty = true;
         }
 
@@ -692,57 +682,67 @@ void loop() {
           } else if (hardBtn.contains(t_x, t_y)) {
             hardBtn.press(true);
             hardBtn.pressAction();
+          } else if (btnhome.contains(t_x, t_y)) {
+            btnhome.press(true);
+            btnhome.pressAction();
           }
         }
         break;
       }
-      case selectNumQuestion: {
-        if (!initNumQuestion) {
-          delay(400);
-          tft.fillScreen(TFT_BLACK);
-          Serial.println("Select number of questions");
-          uint16_t x = (tft.width() - BUTTON_W) / 2;
-          uint16_t y = tft.height() / 2 - 3 * BUTTON_H / 2 -20;
+      // case selectNumQuestion: {
+      //   if (!initNumQuestion) { // disabled, code jumps straight to quiz
+      //     delay(700);
+      //     tft.fillScreen(TFT_BLACK);
+      //     Serial.println("Select number of questions");
+      //     uint16_t x = (tft.width() - BUTTON_W) / 2;
+      //     uint16_t y = tft.height() / 2 - 3 * BUTTON_H / 2 -20;
+      //     tft.setTextColor(TFT_WHITE);
+      //     tft.drawString("Number of Questions", x - 40, y - 10);
 
-          fiveBtn.initButtonUL(x, y + 20, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_BLUE, TFT_BLACK, "5", 1);
-          fiveBtn.setPressAction(fiveBtn_pressAction);
-          fiveBtn.drawSmoothButton(false, 3, TFT_BLACK);
+      //     fiveBtn.initButtonUL(x, y + 20, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_GREEN, TFT_BLACK, "5", 1);
+      //     fiveBtn.setPressAction(fiveBtn_pressAction);
+      //     fiveBtn.drawSmoothButton(false, 3, TFT_BLACK);
 
-          tenBtn.initButtonUL(x, y + 80, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_BLUE, TFT_BLACK, "10", 1);
-          tenBtn.setPressAction(tenBtn_pressAction);
-          tenBtn.drawSmoothButton(false, 3, TFT_BLACK);
+      //     tenBtn.initButtonUL(x, y + 80, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_CYAN, TFT_BLACK, "10", 1);
+      //     tenBtn.setPressAction(tenBtn_pressAction);
+      //     tenBtn.drawSmoothButton(false, 3, TFT_BLACK);
 
-          twentyBtn.initButtonUL(x, y + 140, BUTTON_W + 30, BUTTON_H, TFT_WHITE, TFT_BLUE, TFT_BLACK, "20", 1);
-          twentyBtn.setPressAction(twentyBtn_pressAction);
-          twentyBtn.drawSmoothButton(false, 3, TFT_BLACK);
-          initNumQuestion = true;
-        }
+      //     twentyBtn.initButtonUL(x, y + 140, BUTTON_W + 30, BUTTON_H, TFT_WHITE, 0x00c8ff, TFT_BLACK, "20", 1);
+      //     twentyBtn.setPressAction(twentyBtn_pressAction);
+      //     twentyBtn.drawSmoothButton(false, 3, TFT_BLACK);
+      //     initNumQuestion = true; 
+      //   }
 
-        if (pressed) {
-          if (fiveBtn.contains(t_x, t_y)) {
-            fiveBtn.press(true);
-            fiveBtn.pressAction();
-          } else if (tenBtn.contains(t_x, t_y)) {
-            tenBtn.press(true);
-            tenBtn.pressAction();
-          } else if (twentyBtn.contains(t_x, t_y)) {
-            twentyBtn.press(true);
-            twentyBtn.pressAction();
-          }
-        }
-        break;
-      }
+      //   if (pressed) {
+      //     if (fiveBtn.contains(t_x, t_y)) {
+      //       fiveBtn.press(true);
+      //       fiveBtn.pressAction();
+      //     } else if (tenBtn.contains(t_x, t_y)) {
+      //       tenBtn.press(true);
+      //       tenBtn.pressAction();
+      //     } else if (twentyBtn.contains(t_x, t_y)) {
+      //       twentyBtn.press(true);
+      //       twentyBtn.pressAction();
+      //     }
+      //   }
+      //   break;
+      // }
       case quiz: {
-      if (!questionsDownloaded || questionIndex == maxQuestionIndex) {
+      if (!questionsDownloaded) {
+        Serial.println("Question Download is false");
         tft.fillScreen(TFT_BLACK);
           if (WiFi.status() == WL_CONNECTED) {
+            Serial.println("Wifi Connected");
             HTTPClient http;
+              Serial.println("HTTP Client");
               http.begin("http://quizzyaiserver.sytes.net:5000/generateQuestion");
               http.addHeader("Content-Type", "application/json");
 
               tft.setTextColor(TFT_GREEN);
-              tft.drawString("Generating...", 100, 80);
-              int httpResponseCode = http.POST("{\"topic\": \"" + categorySelected + "\", \"numberOfQuestions\": " + String(numberOfQuestions) + ", \"difficulty\": \"" + difficulty + "\"}");
+              tft.setFreeFont(FF23);
+              tft.drawString("Generating...", 60, 80);
+              tft.setFreeFont(FF18);
+              int httpResponseCode = http.POST("{\"topic\": \"" + categorySelected + "\", \"numberOfQuestions\": \"" + difficulty + "\"}");
               Serial.println("POSTING");
 
             if (httpResponseCode > 0) {
@@ -759,25 +759,20 @@ void loop() {
                   if (doc["allQuestions"]) {
                     allQuestions = doc["allQuestions"];
                     int size = sizeof(allQuestions) / sizeof(allQuestions[0]);
-                    questionIndex = 0;
-                    maxQuestionIndex = size - 1;
                   } else {
                     JsonCorrectAnswer = doc["correctAnswer"];
                     question = doc["question"];
                     incorrectAnswers = doc["incorrectAnswer"];
-                    questionIndex = 0;
-                    maxQuestionIndex = 1;
                   }
                   
                   processQuestion();
-                  questionsDownloaded = true;
                 } else {
                   tft.drawString("Something went wrong.", 20, 20);
                   Serial.println("Response array is empty or null");
                   delay(5000);
                 }
               } else {
-                tft.drawString("This is taking longer than usual", 20, 20);
+                tft.drawString("someone tampered with my server code", 20, 20);
                 Serial.print("JSON deserialization failed: ");
                 Serial.println(error.c_str());
               }
@@ -803,13 +798,14 @@ void loop() {
       }
       case RESULTS: {
         if (!initRESULTS) {
-          btnNext.initButtonUL(140, 140, 80, 35, TFT_WHITE, TFT_GREEN, TFT_BLACK, "NEXT", 1);
+          delay(500);
+          btnNext.initButtonUL(130, 120, 100, 50, TFT_WHITE, TFT_GREEN, TFT_BLACK, "NEXT", 1);
           btnNext.setPressAction(next_pressAction);
           btnNext.drawSmoothButton(false, 2, TFT_BLACK);
 
-          btnHome2.initButtonUL(140, 180, 80, 35, TFT_WHITE, TFT_BLUE, TFT_BLACK, "Home", 1);
-          btnHome2.setPressAction(home2_pressAction);
-          btnHome2.drawSmoothButton(false, 2, TFT_BLACK);
+          btnhome.initButtonUL(130, 180, 100, 50, TFT_WHITE, 0x00c8ff, TFT_BLACK, "Home", 1);
+          btnhome.setPressAction(home_pressAction);
+          btnhome.drawSmoothButton(false, 2, TFT_BLACK);
 
           initRESULTS = true;
         }
@@ -817,16 +813,10 @@ void loop() {
           if (btnNext.contains(t_x, t_y)) {
             btnNext.press(true);
             btnNext.pressAction();
-          } else if (btnHome2.contains(t_x, t_y)) {
-            btnHome2.press(true);
-            btnHome2.pressAction();
-          } else {
-            btnNext.press(false);
-            btnHome2.press(false);
+          } else if (btnhome.contains(t_x, t_y)) {
+            btnhome.press(true);
+            btnhome.pressAction();
           }
-        } else {
-          btnNext.press(false);
-          btnHome2.press(false);
         }
         break;
       }
